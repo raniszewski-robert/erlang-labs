@@ -1,7 +1,7 @@
 -module(pollution).
 -export([create_monitor/0, add_station/3, add_value/5,
   remove_value/4, get_one_value/4, get_station_min/3,
-  get_daily_mean/3, get_area_mean/4]).
+  get_daily_mean/3, get_area_mean/4, get_station/2]).
 
 -record(station, {name, coords, results}).
 % {string, {number, number}, [#result, #result,...]}
@@ -15,8 +15,8 @@ create_monitor() -> #monitor{nameMap = #{}, coordsMap = #{}}.
 
 get_station(StationInfo, Monitor) ->
   case is_tuple(StationInfo) of
-    true -> maps:get(StationInfo, Monitor#monitor.coordsMap, false);
-    false -> maps:get(StationInfo, Monitor#monitor.nameMap, false)
+    true -> maps:get(StationInfo, Monitor#monitor.coordsMap, {error, "brak stacji o podanych parametrach"});
+    false -> maps:get(StationInfo, Monitor#monitor.nameMap, {error, "brak stacji o podanych parametrach"})
   end.
 
 add_station(Name, Coords, Monitor) ->
