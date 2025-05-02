@@ -22,7 +22,7 @@ get_station(StationInfo, Monitor) ->
 add_station(Name, Coords, Monitor) ->
   case maps:is_key(Name, Monitor#monitor.nameMap) or maps:is_key(Coords, Monitor#monitor.coordsMap) of
     true ->
-      {error, "Nieprawidłowa stacja"};
+      {error, "Nieprawidlowa stacja"};
     false ->
       Station = #station{name = Name, coords = Coords, results = []},
       NameMap = Monitor#monitor.nameMap,
@@ -33,7 +33,7 @@ add_station(Name, Coords, Monitor) ->
 add_value(StationInfo, Date, Type, Value, Monitor) ->
   Station = get_station(StationInfo, Monitor),
   case Station of
-    false -> {error, "Stacja nie istnieje"};
+    {error, _} -> {error, "Stacja nie istnieje"};
     _ ->
       Result = #result{type = Type, date = Date, value = Value},
       ResultCheck = {Type, Date},
@@ -55,7 +55,7 @@ remove_value(StationInfo, Date, Type, Monitor) ->
   Station = get_station(StationInfo, Monitor),
 
   case Station of
-    false -> {error, "Stacja nie istnieje"};
+    {error, _} -> {error, "Stacja nie istnieje"};
     _ ->
       Results = Station#station.results,
       ResultsSize = length(Results),
@@ -75,7 +75,7 @@ remove_value(StationInfo, Date, Type, Monitor) ->
 get_one_value(StationInfo, Date, Type, Monitor) ->
   Station = get_station(StationInfo, Monitor),
   case Station of
-    false -> {error, "Stacja nie istnieje"};
+    {error, _} -> {error, "Stacja nie istnieje"};
     _ ->
       Results = Station#station.results,
       NewResults = lists:filter(fun(Res) -> (Res#result.date == Date) and (Res#result.type == Type) end, Results),
@@ -91,13 +91,13 @@ get_one_value(StationInfo, Date, Type, Monitor) ->
 get_station_min(StationInfo, Type, Monitor) ->
   Station = get_station(StationInfo, Monitor),
   case Station of
-    false -> {error, "Stacja nie istnieje"};
+    {error, _} -> {error, "Stacja nie istnieje"};
     _ ->
       Results = Station#station.results,
       NewResults = lists:filter(fun(Res) -> Res#result.type == Type end, Results),
       Values = lists:map(fun(Res) -> Res#result.value end, NewResults),
       case Values of
-        [] -> {error, "Brak wartości"};
+        [] -> {error, "Brak wartosci"};
         _ -> lists:min(Values)
       end
   end.
@@ -113,7 +113,7 @@ get_daily_mean(Type, Day, Monitor) ->
     (DayCheck == Day) and (Res#result.type == Type) end, Results2),
   ValueList = lists:map(fun(Res) -> Res#result.value end, ResultsType),
   case ValueList of
-    [] -> {error, "Brak wartości"};
+    [] -> {error, "Brak wartosci"};
     _ -> lists:sum(ValueList) / length(ValueList)
   end.
 
@@ -132,6 +132,6 @@ get_area_mean(Type, Coords, Radius, Monitor) ->
   ResultsType = lists:filter(fun(Res) -> Res#result.type == Type end, Values),
   ValueList = lists:map(fun(Res) -> Res#result.value end, ResultsType),
   case ValueList of
-    [] -> {error, "Brak wartości"};
+    [] -> {error, "Brak wartosci"};
     _ -> lists:sum(ValueList) / length(ValueList)
   end.
