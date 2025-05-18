@@ -1,4 +1,4 @@
-my_app
+pollution_server
 =====
 
 An OTP application

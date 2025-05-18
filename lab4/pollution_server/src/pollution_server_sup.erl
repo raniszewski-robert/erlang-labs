@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc my_app top level supervisor.
+%% @doc pollution_server top level supervisor.
 %% @end
 %%%-------------------------------------------------------------------
 
--module(my_app_sup).
+-module(pollution_server_sup).
 
 -behaviour(supervisor).
 
@@ -31,9 +31,12 @@ init([]) ->
         intensity => 0,
         period => 1
     },
-    ChildSpecs = [
-
-    ],
+    ChildSpecs = #{id => pollution_gen_server,
+            start => {pollution_gen_server, start_link, []},
+            restart => permanent,
+            shutdown => 2000,
+            type => worker,
+            modules => [pollution_gen_server]},
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions

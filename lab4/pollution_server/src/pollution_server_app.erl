@@ -1,16 +1,16 @@
 %%%-------------------------------------------------------------------
-%% @doc my_app public API
+%% @doc pollution_server public API
 %% @end
 %%%-------------------------------------------------------------------
 
--module(my_app_app).
+-module(pollution_server_app).
 
 -behaviour(application).
 
 -export([start/2, stop/1]).
 
 start(_StartType, _StartArgs) ->
-    my_app_sup:start_link().
+    pollution_server_sup:start_link().
 
 stop(_State) ->
     ok.
