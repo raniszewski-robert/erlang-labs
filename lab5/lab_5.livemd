@@ -1,0 +1,53 @@
+# Untitled notebook
+
+## Section
+
+```elixir
+defmodule Prs do
+  def parse_line(line) do
+    [date, type, value, id, name, coords] = line |> String.split(";")
+
+    %{
+      :date => date |> parse_date(),
+      :type => type, :value => value |> String.to_float(),
+      :id => id |> String.to_integer(),
+      :name => name, 
+      :coords => coords |> String.split(",") |> Enum.map(&String.to_float/1) |> List.to_tuple()
+    }
+  end
+  defp parse_date(date) do
+    [date, time] = date |> String.split("T")
+    date = date |> String.split("-") 
+      |> Enum.map(&String.to_integer/1) |> List.to_tuple()
+    time_len = String.length(time)
+    time = time |> String.slice(0, time_len - 5) |> String.split(":") 
+      |> Enum.map(&String.to_integer/1) |> List.to_tuple()
+    {date, time}
+  end
+end
+
+file = File.read!("D:\\Profil\\Downloads\\pollution_50k.csv\\AirlyData-ALL-50k.csv")
+|> String.trim()
+|> String.split("\n")
+|> Enum.map(&Prs.parse_line/1)
+file_uniq = Enum.uniq_by(file, & &1[:id])
+
+Code.append_path("D:\\Profil\\Desktop\\Informatyka\\4sem\\erlang-labs\\lab4\\pollution_server\\_build\\default\\lib\\pollution_server\\ebin")
+Application.start(:pollution_server)
+Enum.map(file_uniq, & :pollution_gen_server.add_station(&1[:id], &1[:coords]))
+```
+
+```elixir
+file_pm10 = Enum.filter(file, & &1[:type] == "PM10")
+time = :timer.tc(fn -> Enum.map(file_pm10, & :pollution_gen_server.add_value(&1[:id], &1[:date], &1[:type], &1[:value])) end)
+|> elem(0)
+time / 1000000
+```
+
+```elixir
+:pollution_gen_server.get_station({50.057224,19.933157})
+```
+
+```elixir
+Application.stop(:pollution_server)
+```
