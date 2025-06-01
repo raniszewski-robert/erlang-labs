@@ -31,21 +31,69 @@ file = File.read!("D:\\Profil\\Downloads\\pollution_50k.csv\\AirlyData-ALL-50k.c
 |> String.split("\n")
 |> Enum.map(&Prs.parse_line/1)
 file_uniq = Enum.uniq_by(file, & &1[:id])
+file_uniq
 
-Code.append_path("D:\\Profil\\Desktop\\Informatyka\\4sem\\erlang-labs\\lab4\\pollution_server\\_build\\default\\lib\\pollution_server\\ebin")
-Application.start(:pollution_server)
-Enum.map(file_uniq, & :pollution_gen_server.add_station(&1[:id], &1[:coords]))
+
+# time = :timer.tc(fn -> Enum.map(file_uniq, & :pollution_gen_server.add_station(&1[:name], &1[:coords])) end)
+# |> elem(0)
+# time / 1000000
+# Enum.map(file_uniq, & :pollution_gen_server.add_station(&1[:name], &1[:coords]))
 ```
 
 ```elixir
-file_pm10 = Enum.filter(file, & &1[:type] == "PM10")
-time = :timer.tc(fn -> Enum.map(file_pm10, & :pollution_gen_server.add_value(&1[:id], &1[:date], &1[:type], &1[:value])) end)
+defmodule Timer do
+  def measure_fun(data, fun) do
+    time = :timer.tc(fn -> Enum.map(data, fun) end) |> elem(0)
+    time / 1000000
+  end
+
+end
+```
+
+```elixir
+Code.append_path("D:\\Profil\\Desktop\\Informatyka\\4sem\\erlang-labs\\lab4\\pollution_server\\_build\\default\\lib\\pollution_server\\ebin")
+
+Application.stop(:pollution_server)
+Application.start(:pollution_server)
+
+time = Timer.measure_fun(file_uniq, fn station ->
+  id_name = "#{station[:id]} #{station[:name]}"
+  :pollution_gen_server.add_station(id_name, station[:coords])
+end)
+
+```
+
+```elixir
+# file_pm10 = Enum.filter(file, & &1[:type] == "PM10")
+# time = Timer.measure_fun(file_pm10, fn station ->
+#   :pollution_gen_server.add_value(station[:coords], station[:date], station[:type], station[:value])
+# end)
+```
+
+```elixir
+time = Timer.measure_fun(file, fn station ->
+  :pollution_gen_server.add_value(station[:coords], station[:date], station[:type], station[:value])
+end)
+```
+
+```elixir
+:pollution_gen_server.get_station_min("9910 Polska, Kraków, Studencka", "PM10")
+```
+
+```elixir
+time = :timer.tc(fn -> :pollution_gen_server.get_station_min("9910 Polska, Kraków, Studencka", "PM10") end)
 |> elem(0)
 time / 1000000
 ```
 
 ```elixir
-:pollution_gen_server.get_station({50.057224,19.933157})
+:pollution_gen_server.get_daily_mean("PM25", {2024, 2, 10})
+```
+
+```elixir
+time = :timer.tc(fn -> :pollution_gen_server.get_daily_mean("PM25", {2024, 2, 10}) end)
+|> elem(0)
+time / 1000000
 ```
 
 ```elixir
