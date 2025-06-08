@@ -1,6 +1,6 @@
 defmodule PollutionDataLoader do
   def parse_csv(file_path) do
-    file = File.read!("D:\\Profil\\Downloads\\pollution_50k.csv\\AirlyData-ALL-50k.csv")
+    File.read!(file_path)
            |> String.trim()
            |> String.split("\n")
            |> Enum.map(&parse_line/1)
@@ -37,27 +37,21 @@ defmodule PollutionDataLoader do
 
   def load(data_path) do
     data = parse_csv(data_path)
-    uniq_stations = identifyStations(data)
-
-    # Run pollution gen server
-    Code.append_path("D:\\Profil\\Desktop\\Informatyka\\4sem\\erlang-labs\\lab4\\pollution_server\\_build\\default\\lib\\pollution_server\\ebin")
-
-    case Application.start(:pollution_server) do
-      :ok ->
-        IO.puts("lab4 started successfully")
-        # Add stations to the server
-        time = measure_fun(uniq_stations, fn station ->
-          id_name = "#{station[:id]} #{station[:name]}"
-          :pollution_gen_server.add_station(id_name, station[:coords])
-        end)
-        IO.puts("added unique stations to the server [#{time}]s")
-        # Add measurements to the server
-        time = Timer.measure_fun(file, fn station ->
-          :pollution_gen_server.add_value(station[:coords], station[:date], station[:type], station[:value])
-        end)
-        IO.puts("added measurements [#{time}]s")
-      {:error, _} ->
-        IO.puts("Failed to start :pollution_server")
-    end
+    uniq_stations = id_stations(data)
+    IO.puts("lab4 started successfully")
+    # Add stations to the server
+    time = measure_fun(uniq_stations, fn station ->
+      id_name = "#{station[:id]} #{station[:name]}"
+      {lon, lat} = station[:coords]
+      Pollutiondb.Station.add(id_name, lon, lat)
+    end)
+    IO.puts("added unique stations to the server [#{time}]s")
+    # Add measurements to the server
+    time = measure_fun(data, fn station ->
+      [this_station| _] = Pollutiondb.Station.find_by_name("#{station[:id]} #{station[:name]}")
+      {date, time} = station[:date]
+      Pollutiondb.Reading.add(this_station, date, time, station[:type], station[:value])
+    end)
+    IO.puts("added measurements [#{time}]s")
   end
 end
